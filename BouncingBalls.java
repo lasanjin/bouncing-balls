@@ -16,7 +16,7 @@ public class BouncingBalls extends JPanel {
 
     private final int frameW = 600;
     private final int frameH = 800;
-    private final double g = 0;// 9.82;
+    private final double g = 9.82;
     private final double dt = 0.0167; // ~60 fps
     private final double elasticity = 0.8;
     private final int scale = 100; // pixels/meter
