@@ -10,11 +10,13 @@ import java.util.List;
 
 public class BouncingBalls extends JPanel {
 
+    private static final long serialVersionUID = 1L;
+
     Random rand = new Random();
 
     private final int frameW = 600;
     private final int frameH = 800;
-    private final double g = 9.82;
+    private final double g = 0;// 9.82;
     private final double dt = 0.0167; // ~60 fps
     private final double elasticity = 0.8;
     private final int scale = 100; // pixels/meter
@@ -25,7 +27,7 @@ public class BouncingBalls extends JPanel {
 
     List<Ball> balls = new ArrayList<>();
 
-    public void updateBalls() {
+    private void updateBalls() {
         for (Ball b : balls) {
             b.acc();
             b.move();
@@ -52,7 +54,7 @@ public class BouncingBalls extends JPanel {
         }
     }
 
-    public void updateCollision() {
+    private void updateCollision() {
         int length = balls.size();
         Ball A, B;
 
@@ -75,7 +77,7 @@ public class BouncingBalls extends JPanel {
         }
     }
 
-    public void adjustPosition(Ball A, Ball B, int dir) {
+    private void adjustPosition(Ball A, Ball B, int dir) {
         double disX = (B.x - A.x);
         double disY = (B.y - A.y);
         double dis = distance(A, B);
@@ -91,7 +93,7 @@ public class BouncingBalls extends JPanel {
         updatePosition(A, B, dt, dir);
     }
 
-    public void updatePosition(Ball A, Ball B, double dt, int dir) {
+    private void updatePosition(Ball A, Ball B, double dt, int dir) {
         if (dt >= 0) {
             A.x += (A.dx * dt) * dir;
             B.x += (B.dx * dt) * dir;
@@ -100,7 +102,7 @@ public class BouncingBalls extends JPanel {
         }
     }
 
-    public void calcCollision(Ball A, Ball B) {
+    private void calcCollision(Ball A, Ball B) {
         double dis = distance(A, B);
         // unit vectors in direction of collision
         double uvX = (B.x - A.x) / dis;
@@ -116,63 +118,70 @@ public class BouncingBalls extends JPanel {
         double vA = vAx + (((1.0 + elasticity) * (vBx - vAx)) / (1.0 + A.m / B.m));
         double vB = vBx + (((1.0 + elasticity) * (vAx - vBx)) / (1.0 + B.m / A.m));
 
-        // new velocity based on vector direction of combined mass collision
-        // (center-of-mass vector)
+        // update velocity
         A.dx = (vA * uvX) - (vAy * uvY);
         A.dy = (vA * uvY) + (vAy * uvX);
         B.dx = (vB * uvX) - (vBy * uvY);
         B.dy = (vB * uvY) + (vBy * uvX);
     }
 
-    public void createBall(int x, int y) {
+    private void createBall(int x, int y) {
         // (x, y, vx, vy, radius, density, color)
         balls.add(new Ball(x / scale, y / scale, randV(), randV(), randR(), 1, randC()));
     }
 
-    public int randV() {
+    private int randV() {
         return (rand.nextInt(20) - 10);
     }
 
-    public double randR() {
+    private double randR() {
         // min + (max - min) * rand.nextDouble()
-        return 0.1 + (0.5 - 0.1) * rand.nextDouble();
+        return 0.25 + (0.5 - 0.25) * rand.nextDouble();
     }
 
-    public Color randC() {
+    private Color randC() {
         return new Color(rand.nextInt(255), rand.nextInt(255), rand.nextInt(255));
     }
 
-    public double distance(Ball A, Ball B) {
+    private double distance(Ball A, Ball B) {
         return Math.sqrt(Math.pow((B.x - A.x), 2) + Math.pow((B.y - A.y), 2));
     }
 
-    public double velocity(Ball b) {
+    private double velocity(Ball b) {
         return Math.sqrt(b.dx * b.dx + b.dy * b.dy);
     }
 
-    public double force(Ball b) {
+    private double force(Ball b) {
         return Math.sqrt(Math.pow((b.dx / dt), 2) + Math.pow((((b.dy * b.m) / dt) - ((g * b.m))), 2));
+    }
+
+    private double sumR() {
+        double sum = 0;
+        for (Ball b : balls) {
+            sum += 2 * b.radius;
+        }
+        return sum;
     }
 
     private class Ball {
 
-        private double x;
+        private double x; // position
         private double y;
-        private double dx;
+        private double dx; // acc
         private double dy;
-        private double Fx;
+        private double Fx; // force
         private double Fy;
-        private final double m;
+        private final double m; // mass
         private final double radius;
         private Color color;
 
-        public Ball(double x, double y, double vx, double vy, double radius, double density, Color c) {
+        public Ball(double x, double y, double vx, double vy, double r, double d, Color c) {
             this.x = x;
             this.y = y;
             this.dx = vx;
             this.dy = vy;
-            this.radius = radius;
-            this.m = Math.PI * Math.pow(this.radius, 2) * density;
+            this.radius = r;
+            this.m = Math.PI * Math.pow(this.radius, 2) * d;
             this.color = c;
             this.Fx = 0;
             this.Fy = 0;
@@ -204,20 +213,29 @@ public class BouncingBalls extends JPanel {
         }
     }
 
-    public void drawBall(Graphics2D g2d, Ball b) {
+    private void drawBall(Graphics2D g2d, Ball b) {
         //@formatter:off
         Ellipse2D circle = new Ellipse2D.Double(
             (b.x - b.radius) * scale, 
             (b.y - b.radius) * scale,
             2 * b.radius * scale, 
             2 * b.radius * scale);
-
-        g2d.setColor(b.color);
+        // g2d.setColor(b.color);
+        double r = b.radius;
+        GradientPaint gc = new GradientPaint(
+            (float) (b.x - r) * scale, 
+            (float) (b.y - r) * scale, 
+            b.color, 
+            (float) (b.x + r) * scale, 
+            (float) (b.y + r) * scale, 
+            Color.WHITE,
+            true);
+        g2d.setPaint(gc);
         g2d.fill(circle);
         //@formatter:on
     }
 
-    public void update() {
+    private void update() {
         // milliseconds!
         new Timer((int) (dt * 1000), e -> {
             updateBalls();
@@ -226,7 +244,7 @@ public class BouncingBalls extends JPanel {
         }).start();
     }
 
-    public void setFrame() {
+    private void setFrame() {
         setPreferredSize(new Dimension(frameH, frameW));
         JFrame frame = new JFrame();
 
@@ -240,11 +258,14 @@ public class BouncingBalls extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 // left mouse click adds ball
                 if (SwingUtilities.isLeftMouseButton(e)) {
-                    createBall(e.getX(), e.getY());
+                    // avoid stacking balls on top of each other
+                    if (sumR() < width / 2) {
+                        createBall(e.getX(), e.getY());
+                    }
                 }
                 // right mouse click removes balls
                 else if (SwingUtilities.isRightMouseButton(e)) {
-                    balls = new ArrayList<>();
+                    balls.clear();
                 }
             }
 
@@ -266,7 +287,7 @@ public class BouncingBalls extends JPanel {
         });
     }
 
-    public void run() {
+    private void run() {
         setFrame();
         update();
     }
