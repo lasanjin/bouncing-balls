@@ -224,10 +224,10 @@ public class BouncingBalls extends JPanel {
         double r = b.radius;
         GradientPaint gc = new GradientPaint(
             (float) (b.x - r) * scale, 
-            (float) (b.y - r) * scale, 
+            (float) (b.y + r) * scale, 
             b.color, 
             (float) (b.x + r) * scale, 
-            (float) (b.y + r) * scale, 
+            (float) (b.y - r) * scale, 
             Color.WHITE,
             true);
         g2d.setPaint(gc);
